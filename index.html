@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Disk Delivery Açaí</title>
+    <link rel="stylesheet" href="styles.css"> <!-- Link para o CSS externo -->
+</head>
+<body>
+    <div class="container">
+        <h1>Disk Delivery Açaí</h1>
+        <div class="card">
+            <h2>Montagem do Açaí</h2>
+            <form id="formAçaí">
+                <label for="tamanho">Tamanho:</label>
+                <select id="tamanho">
+                    <option value="300ml">300ml - R$14,00</option>
+                    <option value="500ml">500ml - R$18,00</option>
+                    <option value="700ml">700ml - R$24,00</option>
+                    <option value="1l">1 Litro - R$35,00</option>
+                </select>
+
+                <h3>Frutas (Escolha até 2)</h3>
+                <select id="frutas" multiple>
+                    <option value="uva">Uva</option>
+                    <option value="banana">Banana</option>
+                    <option value="morango">Morango</option>
+                    <option value="abacaxi">Abacaxi</option>
+                    <option value="amora">Amora</option>
+                </select>
+
+                <h3>Coberturas (Escolha até 2)</h3>
+                <select id="coberturas" multiple>
+                    <option value="leite_condensado">Leite Condensado</option>
+                    <option value="mel">Mel</option>
+                    <option value="chocolate">Chocolate</option>
+                    <option value="morango">Morango</option>
+                    <option value="amora">Amora</option>
+                </select>
+
+                <h3>Complementos (Escolha até 5)</h3>
+                <select id="complementos" multiple>
+                    <option value="paçoca">Paçoca</option>
+                    <option value="leite_em_pó">Leite em Pó</option>
+                    <option value="granola">Granola</option>
+                    <option value="chocobal">Chocobal</option>
+                    <option value="gotas_de_chocolate">Gotas de Chocolate</option>
+                    <option value="sucro">Sucrilhos</option>
+                    <option value="disquete">Disquete</option>
+                    <option value="ovomaltine">Ovomaltine</option>
+                    <option value="flocos_de_arroz">Flocos de Arroz</option>
+                </select>
+
+                <h3>Adicionais (Escolha até 3)</h3>
+                <select id="adicionais" multiple>
+                    <option value="nutela">Nutela - R$4,00</option>
+                    <option value="cantinho">Cantinho - R$3,00</option>
+                    <option value="outros">Outros - R$1,50</option>
+                </select>
+
+                <button type="button" onclick="adicionarAoCarrinho()">Adicionar ao Carrinho</button>
+            </form>
+        </div>
+
+        <div class="carrinho" id="carrinho">
+            <h2>Carrinho</h2>
+            <ul id="listaCarrinho"></ul>
+            <p id="totalCarrinho">Total: R$0,00</p>
+            <button type="button" onclick="finalizarCompra()">Finalizar Compra</button>
+        </div>
+
+        <div id="formEntrega" style="display:none;">
+            <h2>Formulário de Entrega</h2>
+            <label for="nome">Nome:</label>
+            <input type="text" id="nome" required>
+
+            <label for="endereco">Endereço:</label>
+            <input type="text" id="endereco" required>
+
+            <label for="telefone">Telefone:</label>
+            <input type="text" id="telefone" required>
+
+            <label for="pagamento">Forma de Pagamento:</label>
+            <select id="pagamento" onchange="toggleTroco()">
+                <option value="pix">PIX</option>
+                <option value="dinheiro">Dinheiro</option>
+                <option value="cartao">Cartão</option>
+            </select>
+
+            <div id="troco" style="display:none;">
+                <label for="valorPago">Valor Pago:</label>
+                <input type="number" id="valorPago" min="0" step="0.01">
+            </div>
+
+            <button type="button" onclick="enviarPedido()">Enviar Pedido</button>
+        </div>
+    </div>
+
+    <script>
+        const carrinho = [];
+        const precos = {
+            "300ml": 14.00,
+            "500ml": 18.00,
+            "700ml": 24.00,
+            "1l": 35.00,
+            "nutela": 4.00,
+            "cantinho": 3.00,
+            "outros": 1.50
+        };
+
+        function adicionarAoCarrinho() {
+            const tamanho = document.getElementById('tamanho').value;
+            const frutas = Array.from(document.getElementById('frutas').selectedOptions).map(option => option.value);
+            const coberturas = Array.from(document.getElementById('coberturas').selectedOptions).map(option => option.value);
+            const complementos = Array.from(document.getElementById('complementos').selectedOptions).map(option => option.value);
+            const adicionais = Array.from(document.getElementById('adicionais').selectedOptions).map(option => option.value);
+
+            if (frutas.length > 2) {
+                alert('Você pode escolher no máximo 2 frutas.');
+                return;
+            }
+            if (coberturas.length > 2) {
+                alert('Você pode escolher no máximo 2 coberturas.');
+                return;
+            }
+            if (complementos.length > 5) {
+                alert('Você pode escolher no máximo 5 complementos.');
+                return;
+            }
+            if (adicionais.length > 3) {
+                alert('Você pode escolher no máximo 3 adicionais.');
+                return;
+            }
+
+            const total = precos[tamanho] + adicionais.reduce((acc, item) => acc + (precos[item] || 0), 0);
+            const item = {
+                tamanho,
+                frutas,
+                coberturas,
+                complementos,
+                adicionais,
+                total
+            };
+            carrinho.push(item);
+            atualizarCarrinho();
+        }
+
+        function atualizarCarrinho() {
+            const listaCarrinho = document.getElementById('listaCarrinho');
+            listaCarrinho.innerHTML = '';
+
+            let totalCarrinho = 0;
+            carrinho.forEach(item => {
+                const li = document.createElement('li');
+                li.textContent = `${item.tamanho} - Frutas: ${item.frutas.join(', ')} | Coberturas: ${item.coberturas.join(', ')} | Complementos: ${item.complementos.join(', ')} | Adicionais: ${item.adicionais.join(', ')} - R$${item.total.toFixed(2)}`;
+                listaCarrinho.appendChild(li);
+                totalCarrinho += item.total;
+            });
+
+            document.getElementById('totalCarrinho').textContent = `Total: R$${totalCarrinho.toFixed(2)}`;
+        }
+
+        function finalizarCompra() {
+            if (carrinho.length === 0) {
+                alert('Adicione itens ao carrinho antes de finalizar a compra.');
+                return;
+            }
+
+            document.getElementById('formEntrega').style.display = 'block';
+        }
+
+        function toggleTroco() {
+            const formaPagamento = document.getElementById('pagamento').value;
+            document.getElementById('troco').style.display = formaPagamento === 'dinheiro' ? 'block' : 'none';
+        }
+
+        function enviarPedido() {
+            const nome = document.getElementById('nome').value;
+            const endereco = document.getElementById('endereco').value;
+            const telefone = document.getElementById('telefone').value;
+            const pagamento = document.getElementById('pagamento').value;
+            const valorPago = document.getElementById('valorPago').value;
+
+            let mensagem = `Pedido de Açaí:\n`;
+            carrinho.forEach(item => {
+                mensagem += `${item.tamanho} - Frutas: ${item.frutas.join(', ')} | Coberturas: ${item.coberturas.join(', ')} | Complementos: ${item.complementos.join(', ')} | Adicionais: ${item.adicionais.join(', ')} - R$${item.total.toFixed(2)}\n`;
+            });
+
+            const totalCarrinho = carrinho.reduce((total, item) => total + item.total, 0);
+            mensagem += `Total: R$${totalCarrinho.toFixed(2)}\n`;
+            mensagem += `Nome: ${nome}\n`;
+            mensagem += `Endereço: ${endereco}\n`;
+            mensagem += `Telefone: ${telefone}\n`;
+            mensagem += `Forma de Pagamento: ${pagamento}\n`;
+
+            if (pagamento === 'dinheiro') {
+                mensagem += `Valor Pago: ${valorPago}\n`;
+                mensagem += `Troco: R$${(valorPago - totalCarrinho).toFixed(2)}\n`;
+            }
+
+            const telefoneWhatsApp = "27997294468";
+            const mensagemEncoded = encodeURIComponent(mensagem);
+            const urlWhatsApp = `https://api.whatsapp.com/send?phone=${telefoneWhatsApp}&text=${mensagemEncoded}`;
+            window.open(urlWhatsApp, '_blank');
+
+            // Limpar carrinho após enviar pedido
+            carrinho.length = 0;
+            atualizarCarrinho();
+            document.getElementById('formEntrega').style.display = 'none';
+            alert('Pedido enviado com sucesso!');
+        }
+    </script>
+</body>
+</html>
